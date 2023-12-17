@@ -100,7 +100,7 @@ class StringHashSet(private val initialSize: Int) {
      */
     fun contains(str: String): Boolean {
         val intHash1Value = stringToHash1(str)
-        val firstIndex = (intHash1Value % first.size).absoluteValue.toInt()
+        val firstIndex = (intHash1Value % first.size).absoluteValue
         var nextIndex = first[firstIndex]
         if (nextIndex == EMPTY_KEY)
             return false
@@ -111,6 +111,43 @@ class StringHashSet(private val initialSize: Int) {
             nextIndex = next[nextIndex]
         }
         return (intHash1[nextIndex] == intHash1Value && intHash2[nextIndex] == intHash2Value)
+    }
+
+
+    /**
+     * remove a str from the set
+     */
+    fun remove(str: String): Boolean {
+        val intHash1Value = stringToHash1(str)
+        val firstIndex = (intHash1Value % first.size).absoluteValue
+        var nextIndex = first[firstIndex]
+        if (nextIndex == EMPTY_KEY)
+            return false // nothing to remove
+        val intHash2Value = stringToHash2(str)
+        var prevIndex = nextIndex
+        while (next[nextIndex] != EMPTY_KEY) {
+            if (intHash1[nextIndex] == intHash1Value && intHash2[nextIndex] == intHash2Value)
+                break
+            prevIndex = nextIndex
+            nextIndex = next[nextIndex]
+        }
+        // found?
+        if (intHash1[nextIndex] == intHash1Value && intHash2[nextIndex] == intHash2Value) {
+            // first update?
+            if (nextIndex == first[firstIndex]) {
+                first[firstIndex] = next[nextIndex] // unchain first item
+                // does it remove the item completely?
+                if (next[nextIndex] == EMPTY_KEY) {
+                    intHash1[nextIndex] = EMPTY_KEY
+                    intHash2[nextIndex] = EMPTY_KEY
+                }
+            } else {
+                next[prevIndex] = next[nextIndex] // skip one in the chain
+            }
+            size -= 1
+            return true
+        }
+        return false // not found
     }
 
 
@@ -194,7 +231,7 @@ class StringHashSet(private val initialSize: Int) {
             intHash2Data: IntArray,
             next: IntArray
         ): Int {
-            val firstIndex = (intHash1Value % first.size).absoluteValue.toInt()
+            val firstIndex = (intHash1Value % first.size).absoluteValue
             var newSize = size
 
             // simplest case - we don't have an entry yet

@@ -1,6 +1,6 @@
 package nz.rock.datastructures
 
-import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -13,7 +13,7 @@ class StringHashSetTest {
     fun testSet1() {
         val map = StringHashSet(10)
         assertTrue(map.add("test"))
-        Assertions.assertEquals(1, map.size())
+        assertEquals(1, map.size())
         assertTrue(map.contains("test"))
     }
 
@@ -23,11 +23,11 @@ class StringHashSetTest {
         assertTrue(map.add("test"))
         assertTrue(!map.add("test")) // already exists
         assertTrue(!map.add("test"))
-        Assertions.assertEquals(1, map.size())
+        assertEquals(1, map.size())
         assertTrue(map.contains("test"))
 
         map.clear()
-        Assertions.assertEquals(0, map.size())
+        assertEquals(0, map.size())
         assertTrue(map.isEmpty())
         assertTrue(!map.contains("test"))
     }
@@ -38,7 +38,7 @@ class StringHashSetTest {
         assertTrue(map.add("test"))
         assertTrue(map.add("test1"))
         assertTrue(!map.add("test1")) // already exists
-        Assertions.assertEquals(2, map.size())
+        assertEquals(2, map.size())
         assertTrue(map.contains("test"))
         assertTrue(map.contains("test1"))
     }
@@ -47,12 +47,12 @@ class StringHashSetTest {
     fun testSet4() {
         val map = StringHashSet(100)
         for (i in 0 until 99) {
-            val str = "some test $i"
+            val str = generateTestString(i)
             assertTrue(map.add(str))
         }
-        Assertions.assertEquals(99, map.size())
+        assertEquals(99, map.size())
         for (i in 0 until 99) {
-            val str = "some test $i"
+            val str = generateTestString(i)
             assertTrue(map.contains(str), "does not contain \"$str\"")
         }
     }
@@ -62,12 +62,12 @@ class StringHashSetTest {
     fun testSet5() {
         val map = StringHashSet(10)
         for (i in 0 until 99) {
-            val str = "some test $i"
+            val str = generateTestString(i)
             assertTrue(map.add(str))
         }
-        Assertions.assertEquals(99, map.size())
+        assertEquals(99, map.size())
         for (i in 0 until 99) {
-            val str = "some test $i"
+            val str = generateTestString(i)
             assertTrue(map.contains(str), "does not contain \"$str\"")
         }
     }
@@ -88,7 +88,7 @@ class StringHashSetTest {
             }
             assertTrue(added)
         }
-        Assertions.assertEquals(insertSize, map.size())
+        assertEquals(insertSize, map.size())
 
         for (i in 1..insertSize) {
             val folder = i / 1000
@@ -98,11 +98,80 @@ class StringHashSetTest {
         }
 
         map.clear()
-        Assertions.assertEquals(0, map.size())
+        assertEquals(0, map.size())
         assertTrue(map.isEmpty())
         assertTrue(!map.contains("test"))
     }
 
+
+    @Test
+    fun testSet7() {
+        val map = StringHashSet(100)
+        for (i in 0 until 99) {
+            val str = generateTestString(i)
+            assertTrue(map.add(str))
+        }
+        assertEquals(99, map.size())
+        for (i in 0 until 99) {
+            val str = generateTestString(i)
+            assertTrue(map.remove(str), "could not remove \"$str\"")
+        }
+        assertEquals(0, map.size())
+        assertTrue(map.isEmpty())
+    }
+
+
+    @Test
+    fun testSet8() {
+        val map = StringHashSet(100)
+        for (i in 0 until 99) {
+            val str = generateTestString(i)
+            assertTrue(map.add(str))
+        }
+        assertEquals(99, map.size())
+        for (i in 0 until 50) {
+            val str = generateTestString(i)
+            assertTrue(map.remove(str), "could not remove \"$str\"")
+        }
+        assertEquals(49, map.size())
+        assertTrue(!map.isEmpty())
+        for (i in 50 until 99) {
+            val str = generateTestString(i)
+            assertTrue(map.contains(str), "does not have \"$str\"")
+        }
+    }
+
+
+    @Test
+    fun testSet9() {
+        val map = StringHashSet(10)
+        for (i in 0 until 99) {
+            val str = generateTestString(i)
+            assertTrue(map.add(str))
+        }
+        assertEquals(99, map.size())
+        for (i in 0 until 99) {
+            val str = generateTestString(i)
+            assertTrue(map.remove(str), "could not remove \"$str\"")
+        }
+        assertEquals(0, map.size())
+        assertTrue(map.isEmpty())
+        for (i in 0 until 99) {
+            val str = generateTestString(i)
+            assertTrue(map.add(str))
+        }
+        for (i in 0 until 99) {
+            val str = generateTestString(i)
+            assertTrue(map.contains(str), "does not have \"$str\"")
+        }
+    }
+
+    /////////////////////////////////////////////////////////////////////////
+
+    // helper generate test string used throughout these tests
+    private fun generateTestString(index: Int): String {
+        return "https://some.com/test_$index.html"
+    }
 
 }
 
