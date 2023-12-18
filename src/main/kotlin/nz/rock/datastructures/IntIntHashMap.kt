@@ -75,7 +75,7 @@ class IntIntHashMap(private val initialSize: Int) {
             grow()
         }
         val oldSize = size
-        size = insertHelper(key, value, size, first, next, keySet, valueSet)
+        size = insertHelper(key, value, size, first, keySet, valueSet, next)
         return size > oldSize
     }
 
