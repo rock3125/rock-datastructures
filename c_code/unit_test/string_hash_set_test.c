@@ -11,6 +11,11 @@ void string_hash_set_test_1() {
     assert(str_hashset_add(map, "test") == 1);
     assert(map->size == 1);
     assert(str_hashset_contains(map, "test") == 1);
+    str_hashset_clear(map);
+    // should be clear
+    assert(map->size == 0);
+    // de-alloc
+    str_hashset_free(map);
 }
 
 // run all tests

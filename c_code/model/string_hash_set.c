@@ -42,6 +42,7 @@ void str_hashset_clear(StringHashSet* data) {
         data->intHash1 = calloc(data->initialSize, sizeof(int));
         data->intHash2 = calloc(data->initialSize, sizeof(int));
         data->next = calloc(data->initialSize, sizeof(int));
+        data->allocatedSize = data->initialSize;
     }
 
     for (int i = 0; i < data->initialSize; i++) {
@@ -76,13 +77,13 @@ void str_hashset_free(StringHashSet* data) {
  */
 StringHashSet* str_hashset_create(int initialSize) {
     StringHashSet* data = (StringHashSet*) calloc(1, sizeof(StringHashSet));
+    data->initialSize = initialSize;
+    data->allocatedSize = initialSize;
     data->first = calloc(data->initialSize, sizeof(int));
     data->intHash1 = calloc(data->initialSize, sizeof(int));
     data->intHash2 = calloc(data->initialSize, sizeof(int));
     data->next = calloc(data->initialSize, sizeof(int));
     data->size = 0;
-    data->initialSize = initialSize;
-    data->allocatedSize = initialSize;
 
     for (int i = 0; i < data->initialSize; i++) {
         data->first[i] = STRING_HASHMAP_EMPTY_KEY;
