@@ -20,6 +20,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <zlib.h>
 #include "string_hash_set.h"
 
 
@@ -82,20 +83,72 @@ StringHashSet* str_hashset_create(int initialSize) {
     data->size = 0;
     data->initialSize = initialSize;
     data->allocatedSize = initialSize;
+
+    for (int i = 0; i < data->initialSize; i++) {
+        data->first[i] = STRING_HASHMAP_EMPTY_KEY;
+        data->intHash1[i] = STRING_HASHMAP_EMPTY_KEY;
+        data->intHash2[i] = STRING_HASHMAP_EMPTY_KEY;
+        data->next[i] = STRING_HASHMAP_EMPTY_KEY;
+    }
+
     return data;
 }
 
-
+// adler 32 hash from libz
 int stringToHash1(const char* str) {
-    return 0;
+    if (str == NULL)
+        return 0;
+    return (int)adler32(1, (const unsigned char*)str, strlen(str));
 }
 
+// the java String.hashCode() implementation
 int stringToHash2(const char* str) {
-    return 0;
+    if (str == NULL)
+        return 0;
+    int h = 0;
+    int l = (int)strlen(str);
+    int i = 0;
+    if ( l > 0 )
+        while (i < l)
+            h = (h << 5) - h + str[i++] | 0;
+    return h;
 }
 
+// help insert a value into our map
 int insertHelper(int intHash1Value, int intHash2Value, StringHashSet* data) {
-    return 0;
+    if (data == NULL)
+        return 0;
+    int firstIndex = abs(intHash1Value % data->allocatedSize);
+    int newSize = data->size;
+
+    // simplest case - we don't have an entry yet
+    if (data->first[firstIndex] == STRING_HASHMAP_EMPTY_KEY) {
+        data->first[firstIndex] = data->size; // first points to the next empty data-slot
+        // and the data goes into the slots
+        data->intHash1[data->size] = intHash1Value;
+        data->intHash2[data->size] = intHash2Value;
+        data->next[data->size] = STRING_HASHMAP_EMPTY_KEY;
+        newSize += 1;
+
+    } else {
+        // chain down the colliding items and find the next empty
+        int nextIndex = data->first[firstIndex];
+        while (data->next[nextIndex] != STRING_HASHMAP_EMPTY_KEY) {
+            if (data->intHash2[nextIndex] == intHash2Value) // already exists, not added
+                return data->size;
+            nextIndex = data->next[nextIndex];
+        }
+        if (data->intHash1[nextIndex] == intHash1Value && data->intHash2[nextIndex] == intHash2Value) // already exists, not added
+            return data->size;
+        // now prevNext points to the last slot that wasn't empty - chain it in
+        data->next[nextIndex] = data->size;
+        // and put in our data at the end
+        data->intHash1[data->size] = intHash1Value;
+        data->intHash2[data->size] = intHash2Value;
+        data->next[data->size] = STRING_HASHMAP_EMPTY_KEY;
+        newSize += 1;
+    }
+    return newSize;
 }
 
 
@@ -145,8 +198,8 @@ int str_hashset_add(StringHashSet* data, const char* str) {
     int intHash1Value = stringToHash1(str);
     int intHash2Value = stringToHash2(str);
     int oldSize = data->size;
-    int size = insertHelper(intHash1Value, intHash2Value, data);
-    return size > oldSize;
+    data->size = insertHelper(intHash1Value, intHash2Value, data);
+    return data->size > oldSize;
 }
 
 

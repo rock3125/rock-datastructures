@@ -26,14 +26,14 @@ struct STRUCT_StringHashSet {
 
 typedef struct STRUCT_StringHashSet StringHashSet;
 
+// create a new hash set
+StringHashSet* str_hashset_create(int initialSize);
+
 // clear the hash set
 void str_hashset_clear(StringHashSet* data);
 
 // de-allocate the hash set
 void str_hashset_free(StringHashSet* data);
-
-// create a new hash set
-StringHashSet* str_hashset_create(int initialSize);
 
 // add a new string into the hash set and return 1 if it wasn't in there already
 int str_hashset_add(StringHashSet* data, const char* str);
