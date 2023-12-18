@@ -103,5 +103,45 @@ class IntIntHashMapTest {
     }
 
 
+    @Test
+    fun testSet8() {
+        val map = IntIntHashMap(100)
+        for (i in 0 until 99) {
+            assertTrue(map.add(i, i * 50))
+        }
+        assertEquals(99, map.size())
+        for (i in 0 until 50) {
+            assertTrue(map.remove(i), "could not remove $i")
+        }
+        assertEquals(49, map.size())
+        assertTrue(!map.isEmpty())
+        for (i in 50 until 99) {
+            assertTrue(map.contains(i), "does not have $i")
+            assertTrue(map.getValue(i) == i * 50, "does not have $i value")
+        }
+    }
+
+
+    @Test
+    fun testSet9() {
+        val map = IntIntHashMap(10)
+        for (i in 0 until 99) {
+            assertTrue(map.add(i, i * 25))
+        }
+        assertEquals(99, map.size())
+        for (i in 0 until 99) {
+            assertTrue(map.remove(i), "could not remove $i")
+        }
+        assertEquals(0, map.size())
+        assertTrue(map.isEmpty())
+        for (i in 0 until 99) {
+            assertTrue(map.add(i, i * 33))
+        }
+        for (i in 0 until 99) {
+            assertTrue(map.contains(i), "does not have $i")
+            assertTrue(map.getValue(i) == i * 33, "does not have $i value")
+        }
+    }
+
 }
 
