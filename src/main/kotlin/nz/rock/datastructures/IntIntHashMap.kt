@@ -235,8 +235,10 @@ class IntIntHashMap(private val initialSize: Int) {
                         return size
                     nextIndex = next[nextIndex]
                 }
-                if (keyData[nextIndex] == key && valueData[nextIndex] == value) // already exists, not added
+                if (keyData[nextIndex] == key) { // already exists, potentially update
+                    valueData[nextIndex] = value
                     return size
+                }
                 // now prevNext points to the last slot that wasn't empty - chain it in
                 next[nextIndex] = size
                 // and put in our data at the end
