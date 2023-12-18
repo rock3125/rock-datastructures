@@ -57,7 +57,7 @@ void str_hashset_clear(StringHashSet* data) {
 /**
  * free all the data allocated by the StringHashSet
  */
-void str_hashset_free(StringHashSet* data) {
+void str_hashset_free_content_only(StringHashSet* data) {
     if (data->first != NULL) free(data->first);
     if (data->intHash1 != NULL) free(data->intHash1);
     if (data->intHash2 != NULL) free(data->intHash2);
@@ -68,6 +68,14 @@ void str_hashset_free(StringHashSet* data) {
     data->next = NULL;
     data->size = 0;
     data->allocatedSize = 0;
+}
+
+
+/**
+ * free all the data allocated by the StringHashSet
+ */
+void str_hashset_free(StringHashSet* data) {
+    str_hashset_free_content_only(data);
     free(data);
 }
 
@@ -161,23 +169,25 @@ void grow(StringHashSet* data) {
 
     for (int i = 0; i < data->allocatedSize; i++) {
         int oldFirst = data->first[i];
-
         int oldNextIndex = oldFirst;
         while (oldNextIndex != STRING_HASHMAP_EMPTY_KEY) {
             int intHash1Value = data->intHash1[oldNextIndex];
             int intHash2Value = data->intHash2[oldNextIndex];
-            insertHelper(intHash1Value, intHash2Value, newData);
+            newData->size = insertHelper(intHash1Value, intHash2Value, newData);
             oldNextIndex = data->next[oldNextIndex];
         }
 
     } // for each existing entry
 
     // transfer the newly mapped data
+    str_hashset_free_content_only(data);
     data->first = newData->first;
     data->next = newData->next;
     data->intHash1 = newData->intHash1;
     data->intHash2 = newData->intHash2;
     data->size = newData->size;
+    data->initialSize = newData->initialSize;
+    data->allocatedSize = newData->allocatedSize;
     free(newData);
 }
 

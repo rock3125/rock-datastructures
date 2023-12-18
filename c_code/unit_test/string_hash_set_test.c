@@ -85,15 +85,19 @@ void string_hash_set_tests() {
     printf("string_hash_set_test_1: ");
     string_hash_set_test_1();
     printf("passed\n");
+
     printf("string_hash_set_test_2: ");
     string_hash_set_test_2();
     printf("passed\n");
+
     printf("string_hash_set_test_3: ");
     string_hash_set_test_3();
     printf("passed\n");
+
     printf("string_hash_set_test_4: ");
     string_hash_set_test_4();
     printf("passed\n");
+
     printf("string_hash_set_test_5: ");
     string_hash_set_test_5();
     printf("passed\n");
