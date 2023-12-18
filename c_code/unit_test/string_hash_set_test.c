@@ -80,6 +80,34 @@ void string_hash_set_test_5() {
     str_hashset_free(map);
 }
 
+void string_hash_set_test_6() {
+    int insertSize = 1000000;
+    StringHashSet* map = str_hashset_create(500000);
+    const char* extensions[9] = {"txt", "eml", "mp3", "doc", "docx", "avi", "xls", "xlsx", "ppt"};
+    for (int i = 1; i <= insertSize; i++) {
+        int folder = i / 1000;
+        const char* ext = extensions[i % 9];
+        char str[256];
+        sprintf(str, "https://dataset.rock.co.nz/gov-docs-%d/file-%d.%s", folder, i, ext);
+        assert(str_hashset_add(map, str) == 1);
+    }
+    assert(insertSize == map->size);
+
+    for (int i = 1; i <= insertSize; i++) {
+        int folder = i / 1000;
+        const char* ext = extensions[i % 9];
+        char str[256];
+        sprintf(str, "https://dataset.rock.co.nz/gov-docs-%d/file-%d.%s", folder, i, ext);
+        assert(str_hashset_contains(map, str) == 1);
+    }
+    str_hashset_clear(map);
+    // should be clear
+    assert(map->size == 0);
+    assert(str_hashset_contains(map, "test") == 0);
+    // de-alloc
+    str_hashset_free(map);
+}
+
 // run all tests
 void string_hash_set_tests() {
     printf("string_hash_set_test_1: ");
@@ -100,6 +128,10 @@ void string_hash_set_tests() {
 
     printf("string_hash_set_test_5: ");
     string_hash_set_test_5();
+    printf("passed\n");
+
+    printf("string_hash_set_test_6: ");
+    string_hash_set_test_6();
     printf("passed\n");
 }
 
