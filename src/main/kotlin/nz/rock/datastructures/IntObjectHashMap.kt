@@ -234,8 +234,10 @@ class IntObjectHashMap<T: Any>(private val initialSize: Int) {
                 // chain down the colliding items and find the next empty
                 var nextIndex = first[firstIndex]
                 while (next[nextIndex] != EMPTY_KEY) {
-                    if (valueData[nextIndex] == value) // already exists, not added
+                    if (keyData[nextIndex] == key) { // already exists, not added
+                        valueData[nextIndex] = value
                         return size
+                    }
                     nextIndex = next[nextIndex]
                 }
                 if (keyData[nextIndex] == key) { // already exists, potentially update
