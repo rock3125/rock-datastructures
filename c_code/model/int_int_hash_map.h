@@ -10,9 +10,9 @@
 struct STRUCT_IntIntHashMap {
     // a list of first indexes
     int* first;
-    // an array of type 1 hashes identifying a string
+    // an array keys
     int* keySet;
-    // an array of type 2 hashes identifying a string
+    // an array of values
     int* valueSet;
     // an array of next offsets for collisions
     int* next;
@@ -26,13 +26,13 @@ struct STRUCT_IntIntHashMap {
 
 typedef struct STRUCT_IntIntHashMap IntIntHashMap;
 
-// create a new hash set
+// create a new int-int hash map
 IntIntHashMap* iihm_create(int initialSize);
 
-// clear the hash set
+// clear the hash map
 void iihm_clear(IntIntHashMap* data);
 
-// de-allocate the hash set
+// de-allocate the hash map
 void iihm_free(IntIntHashMap* data);
 
 // add a key/value to the hash map and return 1 if the key wasn't in there already

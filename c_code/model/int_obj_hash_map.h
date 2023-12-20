@@ -26,13 +26,13 @@ struct STRUCT_IntObjHashMap {
 
 typedef struct STRUCT_IntObjHashMap IntObjHashMap;
 
-// create a new hash set
+// create a new int -> obj hash map
 IntObjHashMap* iohm_create(int initialSize);
 
-// clear the hash set
+// clear the hash map (reset to size if need be and initialize to 0 items)
 void iohm_clear(IntObjHashMap* data);
 
-// de-allocate the hash set
+// de-allocate the hash map
 void iohm_free(IntObjHashMap* data);
 
 // add a key/value to the hash map and return 1 if the key wasn't in there already

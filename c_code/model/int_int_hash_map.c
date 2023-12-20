@@ -21,7 +21,7 @@
 
 
 /**
- * clear the hash set - remove all data
+ * clear the hash map - remove all data and shrink to the initial size if need be
  */
 void iihm_clear(IntIntHashMap* data) {
     if (data == NULL)
@@ -77,7 +77,7 @@ void iihm_free(IntIntHashMap* data) {
 
 
 /**
- * create a new hash set
+ * create a new hash map of a certain size
  */
 IntIntHashMap* iihm_create(int initialSize) {
     IntIntHashMap* data = (IntIntHashMap*) calloc(1, sizeof(IntIntHashMap));
@@ -99,7 +99,7 @@ IntIntHashMap* iihm_create(int initialSize) {
     return data;
 }
 
-// help insert a value into our map
+// help insert a key/value into our map
 int iihm_insertHelper(int key, int value, IntIntHashMap* data) {
     if (data == NULL)
         return 0;
@@ -140,7 +140,7 @@ int iihm_insertHelper(int key, int value, IntIntHashMap* data) {
     return newSize;
 }
 
-
+// grow the map by 50%
 void iih_grow(IntIntHashMap* data) {
     int oldSize = data->allocatedSize;
     int growSize = ((oldSize * 3) / 2) + 1; // 50% growth
@@ -173,7 +173,7 @@ void iih_grow(IntIntHashMap* data) {
 
 
 /**
- * add a new string into the set
+ * add a new key/value to our map
  * @return true if a new item was added, false if the item already existed
  */
 int iihm_add(IntIntHashMap* data, int key, int value) {
@@ -212,7 +212,7 @@ int iihm_contains(IntIntHashMap* data, int key) {
 
 
 /**
- * remove a str from the set
+ * remove a key from the map
  */
 int iihm_remove(IntIntHashMap* data, int key) {
     int firstIndex = abs(key % data->allocatedSize);

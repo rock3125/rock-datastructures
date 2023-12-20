@@ -10,7 +10,7 @@
  */
 
 /**
- * a memory efficient mostly accurate int object hash map
+ * a memory efficient int -> object hash map
  */
 
 
@@ -20,7 +20,7 @@
 
 
 /**
- * clear the hash set - remove all data
+ * clear the hash map - remove all data and re-allocate to initial size if need be
  */
 void iohm_clear(IntObjHashMap* data) {
     if (data == NULL)
@@ -76,7 +76,7 @@ void iohm_free(IntObjHashMap* data) {
 
 
 /**
- * create a new hash set
+ * create a new hash map
  */
 IntObjHashMap* iohm_create(int initialSize) {
     IntObjHashMap* data = (IntObjHashMap*) calloc(1, sizeof(IntObjHashMap));
@@ -98,7 +98,7 @@ IntObjHashMap* iohm_create(int initialSize) {
     return data;
 }
 
-// help insert a value into our map
+// help insert a key/value into our map
 int iohm_insertHelper(int key, void* value, IntObjHashMap* data) {
     if (data == NULL)
         return 0;
@@ -139,7 +139,7 @@ int iohm_insertHelper(int key, void* value, IntObjHashMap* data) {
     return newSize;
 }
 
-
+// grow the map by 50%
 void iohm_grow(IntObjHashMap* data) {
     int oldSize = data->allocatedSize;
     int growSize = ((oldSize * 3) / 2) + 1; // 50% growth
@@ -211,7 +211,7 @@ int iohm_contains(IntObjHashMap* data, int key) {
 
 
 /**
- * remove a str from the set
+ * remove a key from the map
  */
 int iohm_remove(IntObjHashMap* data, int key) {
     int firstIndex = abs(key % data->allocatedSize);
