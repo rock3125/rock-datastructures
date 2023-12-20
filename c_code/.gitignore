@@ -1,0 +1,9 @@
+.cmake/
+.ninja*
+CMakeCache.txt
+CMakeFiles/
+Testing/
+c_code
+cmake-build-default-event-trace/
+cmake_install.cmake
+build.ninja
