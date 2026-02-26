@@ -1,5 +1,5 @@
 package nz.rock
 
 fun main() {
-    println("Hello World!")
+    println("Use the kotlin files in datastructures in your own project")
 }
