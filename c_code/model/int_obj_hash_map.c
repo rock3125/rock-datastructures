@@ -28,11 +28,13 @@ void iohm_clear(IntObjHashMap* data) {
     data->size = 0;
     // shrink the arrays?
     if (data->allocatedSize > data->initialSize) {
+        // first release the allocated data
         if (data->first != NULL) free(data->first);
         if (data->keySet != NULL) free(data->keySet);
         if (data->valueSet != NULL) free(data->valueSet);
         if (data->next != NULL) free(data->next);
 
+        // re-allocate the original sizes
         data->first = calloc(data->initialSize, sizeof(int));
         data->keySet = calloc(data->initialSize, sizeof(int));
         data->valueSet = calloc(data->initialSize, sizeof(void*));
@@ -40,6 +42,7 @@ void iohm_clear(IntObjHashMap* data) {
         data->allocatedSize = data->initialSize;
     }
 
+    // clear the arrays with "empty" keys so they appear as empty to our algorithm
     for (int i = 0; i < data->initialSize; i++) {
         data->first[i] = INT_OBJ_HASHMAP_EMPTY_KEY;
         data->keySet[i] = INT_OBJ_HASHMAP_EMPTY_KEY;
@@ -53,10 +56,13 @@ void iohm_clear(IntObjHashMap* data) {
  * free all the data allocated by the IntObjHashMap
  */
 void iohm_free_content_only(IntObjHashMap* data) {
+    if (data == NULL) return; // no data, don't de-allocate
+    // de-allocate the arrays first
     if (data->first != NULL) free(data->first);
     if (data->keySet != NULL) free(data->keySet);
     if (data->valueSet != NULL) free(data->valueSet);
     if (data->next != NULL) free(data->next);
+    // set all items in data to NULL and 0
     data->first = NULL;
     data->keySet = NULL;
     data->valueSet = NULL;
@@ -70,7 +76,9 @@ void iohm_free_content_only(IntObjHashMap* data) {
  * free all the data allocated by the IntObjHashMap
  */
 void iohm_free(IntObjHashMap* data) {
+    // free content of map
     iohm_free_content_only(data);
+    // then free the data itself
     free(data);
 }
 
@@ -79,30 +87,34 @@ void iohm_free(IntObjHashMap* data) {
  * create a new hash map
  */
 IntObjHashMap* iohm_create(int initialSize) {
+    // allocate the main structure
     IntObjHashMap* data = (IntObjHashMap*) calloc(1, sizeof(IntObjHashMap));
+    if (data == NULL) return NULL; // failed?
     data->initialSize = initialSize;
     data->allocatedSize = initialSize;
+    // allocate the key arrays
     data->first = calloc(data->initialSize, sizeof(int));
     data->keySet = calloc(data->initialSize, sizeof(int));
     data->valueSet = calloc(data->initialSize, sizeof(void*));
     data->next = calloc(data->initialSize, sizeof(int));
+    // set the map size to 0
     data->size = 0;
 
+    // clear all values inside the arrays as empty
     for (int i = 0; i < data->initialSize; i++) {
         data->first[i] = INT_OBJ_HASHMAP_EMPTY_KEY;
         data->keySet[i] = INT_OBJ_HASHMAP_EMPTY_KEY;
         data->valueSet[i] = NULL;
         data->next[i] = INT_OBJ_HASHMAP_EMPTY_KEY;
     }
-
+    // done - return the new data structure
     return data;
 }
 
 // help insert a key/value into our map
 int iohm_insertHelper(int key, void* value, IntObjHashMap* data) {
-    if (data == NULL)
-        return 0;
-    int firstIndex = abs(key % data->allocatedSize);
+    if (data == NULL) return 0; // can't insert
+    int firstIndex = abs(key % data->allocatedSize); // calculate the "key" offset
     int newSize = data->size;
 
     // simplest case - we don't have an entry yet
@@ -141,11 +153,14 @@ int iohm_insertHelper(int key, void* value, IntObjHashMap* data) {
 
 // grow the map by 50%
 void iohm_grow(IntObjHashMap* data) {
+    if (data == NULL) return; // empty map, can't grow
     int oldSize = data->allocatedSize;
     int growSize = ((oldSize * 3) / 2) + 1; // 50% growth
 
     IntObjHashMap* newData = iohm_create(growSize);
+    if (newData == NULL) return;
 
+    // copy existing data into the new array
     for (int i = 0; i < data->allocatedSize; i++) {
         int oldFirst = data->first[i];
         int oldNextIndex = oldFirst;
@@ -160,6 +175,7 @@ void iohm_grow(IntObjHashMap* data) {
 
     // transfer the newly mapped data
     iohm_free_content_only(data);
+    // copy newData into data, as this is what is being replaced / grown
     data->first = newData->first;
     data->next = newData->next;
     data->keySet = newData->keySet;
@@ -167,7 +183,7 @@ void iohm_grow(IntObjHashMap* data) {
     data->size = newData->size;
     data->initialSize = newData->initialSize;
     data->allocatedSize = newData->allocatedSize;
-    free(newData);
+    free(newData); // de-allocate temporary helper data
 }
 
 
@@ -176,6 +192,7 @@ void iohm_grow(IntObjHashMap* data) {
  * @return true if a new item was added, false if the item already existed
  */
 int iohm_add(IntObjHashMap* data, int key, void* value) {
+    // we can never insert an "empty key" value - or into a NULL data array
     if (key == INT_OBJ_HASHMAP_EMPTY_KEY || data == NULL)
         return 0;
 
@@ -195,33 +212,37 @@ int iohm_add(IntObjHashMap* data, int key, void* value) {
  * is key inside the map (does it exist)
  */
 int iohm_contains(IntObjHashMap* data, int key) {
-    if (key == INT_OBJ_HASHMAP_EMPTY_KEY || data == NULL)
-        return 0;
-    int firstIndex = abs(key % data->allocatedSize);
-    int nextIndex = data->first[firstIndex];
-    if (nextIndex == INT_OBJ_HASHMAP_EMPTY_KEY)
-        return 0;
+    // we can never insert an "empty key" value - or into a NULL data array
+    if (key == INT_OBJ_HASHMAP_EMPTY_KEY || data == NULL) return 0;
+    int firstIndex = abs(key % data->allocatedSize); // start location
+    int nextIndex = data->first[firstIndex]; // the data at that location
+    if (nextIndex == INT_OBJ_HASHMAP_EMPTY_KEY) // no data
+        return 0; // nothing to remove
     while (data->next[nextIndex] != INT_OBJ_HASHMAP_EMPTY_KEY) {
         if (data->keySet[nextIndex] == key)
-            return 1;
+            return 1; // found it!
         nextIndex = data->next[nextIndex];
     }
+    // found that key?
     return (data->keySet[nextIndex] == key);
 }
 
 
 /**
- * remove a key from the map
+ * remove a key from the map (delete)
+ * @return 1 if an item was removed, 0 otherwise
  */
 int iohm_remove(IntObjHashMap* data, int key) {
-    int firstIndex = abs(key % data->allocatedSize);
-    int nextIndex = data->first[firstIndex];
-    if (nextIndex == INT_OBJ_HASHMAP_EMPTY_KEY)
+    // can't remove something from a NULL data structure, or an empty key
+    if (data == NULL || key == INT_INT_HASHMAP_EMPTY_KEY) return 0;
+    int firstIndex = abs(key % data->allocatedSize); // start location
+    int nextIndex = data->first[firstIndex]; // data at location
+    if (nextIndex == INT_OBJ_HASHMAP_EMPTY_KEY) // no data
         return 0; // nothing to remove
     int prevIndex = nextIndex;
     while (data->next[nextIndex] != INT_OBJ_HASHMAP_EMPTY_KEY) {
         if (data->keySet[nextIndex] == key)
-            break;
+            break; // found it!
         prevIndex = nextIndex;
         nextIndex = data->next[nextIndex];
     }
@@ -238,8 +259,8 @@ int iohm_remove(IntObjHashMap* data, int key) {
         } else {
             data->next[prevIndex] = data->next[nextIndex]; // skip one in the chain
         }
-        data->size -= 1;
-        return 1;
+        data->size -= 1; // decrease size of map
+        return 1; // success
     }
     return 0; // not found
 }

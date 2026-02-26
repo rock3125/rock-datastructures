@@ -5,8 +5,14 @@
 #ifndef C_CODE_STRING_HASH_SET_H
 #define C_CODE_STRING_HASH_SET_H
 
+// this is the only value that can't be used in the map of the entire INT range
 #define STRING_HASHMAP_EMPTY_KEY (-1)
 
+/**
+ * we use a double hash (two different functions) to avoid collisions
+ * although this doesn't guarantee no hash collisions, it makes it really
+ * really unlikely
+ */
 struct STRUCT_StringHashSet {
     // a list of first indexes
     int* first;
@@ -24,6 +30,7 @@ struct STRUCT_StringHashSet {
     int size;
 };
 
+// define a nice name for the data structure
 typedef struct STRUCT_StringHashSet StringHashSet;
 
 // create a new hash set

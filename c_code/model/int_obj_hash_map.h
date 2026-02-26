@@ -5,6 +5,7 @@
 #ifndef C_CODE_INT_OBJ_HASH_MAP_H
 #define C_CODE_INT_OBJ_HASH_MAP_H
 
+// this is the only value that can't be used in the map of the entire INT range
 #define INT_OBJ_HASHMAP_EMPTY_KEY (-1)
 
 struct STRUCT_IntObjHashMap {
@@ -24,6 +25,7 @@ struct STRUCT_IntObjHashMap {
     int size;
 };
 
+// define a nice name for the data structure
 typedef struct STRUCT_IntObjHashMap IntObjHashMap;
 
 // create a new int -> obj hash map

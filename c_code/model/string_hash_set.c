@@ -28,16 +28,18 @@
  * clear the hash set - remove all data
  */
 void str_hashset_clear(StringHashSet* data) {
-    if (data == NULL)
+    if (data == NULL) // not set - just return
         return;
-    data->size = 0;
+    data->size = 0; // empty data
     // shrink the arrays?
-    if (data->allocatedSize > data->initialSize) {
+    if (data->allocatedSize > data->initialSize) { // if we've grown beyond the initial size
+        // first release the allocated data
         if (data->first != NULL) free(data->first);
         if (data->intHash1 != NULL) free(data->intHash1);
         if (data->intHash2 != NULL) free(data->intHash2);
         if (data->next != NULL) free(data->next);
 
+        // re-allocate the original sizes
         data->first = calloc(data->initialSize, sizeof(int));
         data->intHash1 = calloc(data->initialSize, sizeof(int));
         data->intHash2 = calloc(data->initialSize, sizeof(int));
@@ -45,6 +47,7 @@ void str_hashset_clear(StringHashSet* data) {
         data->allocatedSize = data->initialSize;
     }
 
+    // clear the arrays with "empty" keys so they appear as empty to our algorithm
     for (int i = 0; i < data->initialSize; i++) {
         data->first[i] = STRING_HASHMAP_EMPTY_KEY;
         data->intHash1[i] = STRING_HASHMAP_EMPTY_KEY;
@@ -58,10 +61,13 @@ void str_hashset_clear(StringHashSet* data) {
  * free all the data allocated by the StringHashSet
  */
 void str_hashset_free_content_only(StringHashSet* data) {
+    if (data == NULL) return; // no data, don't de-allocate
+    // de-allocate the arrays first
     if (data->first != NULL) free(data->first);
     if (data->intHash1 != NULL) free(data->intHash1);
     if (data->intHash2 != NULL) free(data->intHash2);
     if (data->next != NULL) free(data->next);
+    // set all items in data to NULL and 0
     data->first = NULL;
     data->intHash1 = NULL;
     data->intHash2 = NULL;
@@ -75,7 +81,9 @@ void str_hashset_free_content_only(StringHashSet* data) {
  * free all the data allocated by the StringHashSet
  */
 void str_hashset_free(StringHashSet* data) {
+    // free content of map
     str_hashset_free_content_only(data);
+    // then free the data itself
     free(data);
 }
 
@@ -84,36 +92,42 @@ void str_hashset_free(StringHashSet* data) {
  * create a new hash set
  */
 StringHashSet* str_hashset_create(int initialSize) {
+    // allocate the main structure
     StringHashSet* data = (StringHashSet*) calloc(1, sizeof(StringHashSet));
+    if (data == NULL) return NULL; // failed?
+    // set the initial size
     data->initialSize = initialSize;
     data->allocatedSize = initialSize;
+    // allocate the key arrays
     data->first = calloc(data->initialSize, sizeof(int));
     data->intHash1 = calloc(data->initialSize, sizeof(int));
     data->intHash2 = calloc(data->initialSize, sizeof(int));
     data->next = calloc(data->initialSize, sizeof(int));
+    // set the map size to 0
     data->size = 0;
 
+    // clear all values inside the arrays as empty
     for (int i = 0; i < data->initialSize; i++) {
         data->first[i] = STRING_HASHMAP_EMPTY_KEY;
         data->intHash1[i] = STRING_HASHMAP_EMPTY_KEY;
         data->intHash2[i] = STRING_HASHMAP_EMPTY_KEY;
         data->next[i] = STRING_HASHMAP_EMPTY_KEY;
     }
-
+    // done - return the new data structure
     return data;
 }
 
 // adler 32 hash from libz
 int stringToHash1(const char* str) {
-    if (str == NULL)
-        return 0;
+    if (str == NULL) return 0; // NULL string has no hash
+    // use fast adler32 hash to create a unique int value for our string
     return (int)adler32(1, (const unsigned char*)str, strlen(str));
 }
 
-// the java String.hashCode() implementation
+// the java String.hashCode() implementation (similar to Java's own)
 int stringToHash2(const char* str) {
-    if (str == NULL)
-        return 0;
+    if (str == NULL) return 0; // NULL string has no hash
+    // simple hash based on bit shifts and character values
     int h = 0;
     int l = (int)strlen(str);
     int i = 0;
@@ -125,8 +139,7 @@ int stringToHash2(const char* str) {
 
 // help insert a value into our map
 int insertHelper(int intHash1Value, int intHash2Value, StringHashSet* data) {
-    if (data == NULL)
-        return 0;
+    if (data == NULL) return 0; // null data, no insert
     int firstIndex = abs(intHash1Value % data->allocatedSize);
     int newSize = data->size;
 
@@ -137,36 +150,43 @@ int insertHelper(int intHash1Value, int intHash2Value, StringHashSet* data) {
         data->intHash1[data->size] = intHash1Value;
         data->intHash2[data->size] = intHash2Value;
         data->next[data->size] = STRING_HASHMAP_EMPTY_KEY;
-        newSize += 1;
+        newSize += 1; // increase map size
 
     } else {
         // chain down the colliding items and find the next empty
         int nextIndex = data->first[firstIndex];
         while (data->next[nextIndex] != STRING_HASHMAP_EMPTY_KEY) {
             if (data->intHash2[nextIndex] == intHash2Value) // already exists, not added
-                return data->size;
-            nextIndex = data->next[nextIndex];
+                return data->size; // return existing size
+            nextIndex = data->next[nextIndex]; // next value in the chain
         }
+        // did we land on a value that matches our hashes?
         if (data->intHash1[nextIndex] == intHash1Value && data->intHash2[nextIndex] == intHash2Value) // already exists, not added
-            return data->size;
-        // now prevNext points to the last slot that wasn't empty - chain it in
+            return data->size; // no change, value already exists / inserted
+        // INSERT: now prevNext points to the last slot that wasn't empty - chain it in
         data->next[nextIndex] = data->size;
         // and put in our data at the end
         data->intHash1[data->size] = intHash1Value;
         data->intHash2[data->size] = intHash2Value;
+        // next pointer is empty
         data->next[data->size] = STRING_HASHMAP_EMPTY_KEY;
         newSize += 1;
     }
+    // return new size of the map
     return newSize;
 }
 
 
+// grow the map by 50%
 void grow(StringHashSet* data) {
+    if (data == NULL) return; // NULL map, can't grow
     int oldSize = data->allocatedSize;
     int growSize = ((oldSize * 3) / 2) + 1; // 50% growth
 
     StringHashSet* newData = str_hashset_create(growSize);
+    if (newData == NULL) return; // can't allocate new data
 
+    // copy existing data into the new array
     for (int i = 0; i < data->allocatedSize; i++) {
         int oldFirst = data->first[i];
         int oldNextIndex = oldFirst;
@@ -181,6 +201,7 @@ void grow(StringHashSet* data) {
 
     // transfer the newly mapped data
     str_hashset_free_content_only(data);
+    // copy newData into data, as this is what is being replaced / grown
     data->first = newData->first;
     data->next = newData->next;
     data->intHash1 = newData->intHash1;
@@ -188,7 +209,7 @@ void grow(StringHashSet* data) {
     data->size = newData->size;
     data->initialSize = newData->initialSize;
     data->allocatedSize = newData->allocatedSize;
-    free(newData);
+    free(newData); // de-allocate temporary helper data
 }
 
 
@@ -197,6 +218,7 @@ void grow(StringHashSet* data) {
  * @return true if a new item was added, false if the item already existed
  */
 int str_hashset_add(StringHashSet* data, const char* str) {
+    // can't add empty str or into a NULL data
     if (str == NULL || strlen(str) == 0 || data == NULL)
         return 0;
 
@@ -218,19 +240,21 @@ int str_hashset_add(StringHashSet* data, const char* str) {
  * is str inside the map (does it exist)
  */
 int str_hashset_contains(StringHashSet* data, const char* str) {
-    if (str == NULL || strlen(str) == 0)
+    // we can never insert an empty string - or into a NULL data array
+    if (str == NULL || strlen(str) == 0 || data == NULL)
         return 0;
-    int intHash1Value = stringToHash1(str);
+    int intHash1Value = stringToHash1(str); // find first index
     int firstIndex = abs((intHash1Value % data->allocatedSize));
     int nextIndex = data->first[firstIndex];
-    if (nextIndex == STRING_HASHMAP_EMPTY_KEY)
+    if (nextIndex == STRING_HASHMAP_EMPTY_KEY) // not set - not found
         return 0;
-    int intHash2Value = stringToHash2(str);
+    int intHash2Value = stringToHash2(str); // check second hash
     while (data->next[nextIndex] != STRING_HASHMAP_EMPTY_KEY) {
         if (data->intHash1[nextIndex] == intHash1Value && data->intHash2[nextIndex] == intHash2Value)
-            return 1;
+            return 1; // found it!
         nextIndex = data->next[nextIndex];
     }
+    // we've found it if the two hashes match @ nextIndex
     return (data->intHash1[nextIndex] == intHash1Value && data->intHash2[nextIndex] == intHash2Value);
 }
 
@@ -239,16 +263,19 @@ int str_hashset_contains(StringHashSet* data, const char* str) {
  * remove a str from the set
  */
 int str_hashset_remove(StringHashSet* data, const char* str) {
-    int intHash1Value = stringToHash1(str);
-    int firstIndex = abs((intHash1Value % data->allocatedSize));
-    int nextIndex = data->first[firstIndex];
-    if (nextIndex == STRING_HASHMAP_EMPTY_KEY)
+    // can't remove something from a NULL data structure, or an empty string
+    if (data == NULL || str == NULL || strlen(str) == 0) return 0;
+
+    int intHash1Value = stringToHash1(str); // location hash-value
+    int firstIndex = abs((intHash1Value % data->allocatedSize)); // to index
+    int nextIndex = data->first[firstIndex]; // does it exist?
+    if (nextIndex == STRING_HASHMAP_EMPTY_KEY) // dne
         return 0; // nothing to remove
-    int intHash2Value = stringToHash2(str);
+    int intHash2Value = stringToHash2(str); // second verification hash
     int prevIndex = nextIndex;
     while (data->next[nextIndex] != STRING_HASHMAP_EMPTY_KEY) {
         if (data->intHash1[nextIndex] == intHash1Value && data->intHash2[nextIndex] == intHash2Value)
-            break;
+            break; // found it!
         prevIndex = nextIndex;
         nextIndex = data->next[nextIndex];
     }
